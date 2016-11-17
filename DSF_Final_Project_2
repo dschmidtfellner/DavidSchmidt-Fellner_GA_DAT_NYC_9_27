@@ -1,0 +1,61 @@
+In the interest of spending more time on data science and less on data prep, I've chosen a new topic that I didn't present in the lightning presentations. I will be using Trip-level data for New York City yellow cabs over the past year to understand customer tipping behavior. I want to predict tip rates for cab drivers based on knowable information at time of pickup. This will have implications for drivers trying to maximize their tip rate by picking when, where, and for whom they offer their services. Moreover, it's a clean, complete dataset with a consumer behavior variable that is both continuous or categorical depending how you structure it, which will enable me to run various model types and compare the results.
+
+Prior Literature on the Topic:
+
+https://cseweb.ucsd.edu/~jmcauley/cse190/reports/sp15/050.pdf
+	◦	Used "location binning" using lat-longs AND Euclidean distance to "hot spots" like time square, but neither inclusion of geography made a substantive difference to the predictive power
+http://www.bloomberg.com/news/articles/2014-07-31/heres-how-much-you-should-be-tipping-your-cab-driver
+	◦	Verifies several important features that I planned to include as predictors
+https://github.com/josemazo/nyc-taxi-tip-predictor
+	◦	Achieved 70% accuracy predicting binary variable using Random Forest, which beat the linear regression model
+
+
+Data Dictionary
+http://www.nyc.gov/html/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
+
+Model Predictors:
+	•	Month of trip
+	•	Hour of trip
+	•	Payment Type
+	•	Trip distance
+	•	Trip time-length (likely highly correlated with distance)
+	•	Passenger Count
+	•	Airport flag
+	•	Tech vendor (Either Creative Mobile Technologies LLC or VeriFone)
+	•	Optional: Borough of origin, by mapping lat-long data to zip codes to boroughs. Not yet sure if feasible
+Hypotheses: 
+	•	Trip distance will be one of the strongest predictors of tip-rate, where customers on short trips are more generous on a % basis. Tipping on a small total fare makes customers feel comfortable tipping at a higher rate, because it costs less in absolute terms 
+	•	The tech vendor will be a significant predictor, because default tip rates are suggested by whatever interface processes the credit card transaction in the passenger seat
+	•	Long-shot: tip rates will be higher after lunch and dinner (i.e. higher at 2pm than at 12pm and higher at 9pm than 6pm). Not sure this will be thes case, but I will be very interested to see it based on other literature on people's harshness before and after eating meals (link to study with judges, mealtimes, and the severity of their sentences)
+	•	The month will not have an impact on tip rates
+	•	Tip Rates may be lower on rides from the airport, because the cab base fare is higher leaving from an airport
+	•	Passenger count may increase the tip rate, making people more generous after receiving higher benefit from the driver (a ride for multiple people) 
+
+
+Models used (and ultimately compared):
+Linear Regression:
+	◦	Outcome variable: Tip Rate % (continuous)
+
+K-Nearest Neighbors:
+	◦	Outcome variable: Tip Rate (categorical) 
+	▪	0% tip, 0% to 10% tip, 10% to 20% tip, 20% to 30% tip, 30%+ tip
+Logistic Regression:
+	◦	Outcome variable: "Big" Tip (categorical, binary)
+	▪	 1 if 20% or higher, 0% if not
+Decision Tree:
+	◦	Outcome variable: "Big" Tip (categorical, binary)
+	▪	 1 if 20% or higher, 0% if not
+Random Forest:
+	◦	Outcome variable: "Big" Tip (categorical, binary)
+	▪	 1 if 20% or higher, 0% if not
+Random Forest (continuous):
+	◦	Outcome variable: Tip Rate % (continuous)
+All my models will use Grid Search on hyper parameters as well as k-fold validation to galvanize the effectiveness of each one.
+
+Challenges:
+	•	After preliminary analysis, it appears that 40% are cash transactions, with nearly 100% tip recording of 0. Ostensibly, the "tip amount" field is automatically 0, because non-digital transactions won't record tip rate. That being the case, I will have to cut out non-credit card data, limiting my analysis and conclusions to credit card-based trips. This could bias the data. I will explore how whether payment type is correlated with other predictors to understand whether it will create bias.
+	◦	 All prior literature I've read also dropped cash transactions
+	•	The data comes in the form of 12x ~10 million row csv files (1 for each month). In order to have manageable computations, I am going to download each file, take a random sample of 1% of the data, and append it to an aggregated, year-round file. Are there any best practices I need to be aware of while attempting this?
+	•	I'd really like to map lat-long information to boroughs or neighborhoods. That way I can include location data in my predictors. Is there any way to map lat-long data to zip code, and then zip code to neighborhood using dictionaries?
+Potential Followup Work:
+	•	There is an old dataset from 2014 that includes Medallion ID, which gives driver level data. You could roll up analysis to the driver level to understand how drivers can maximize their revenue in a day of driving
